@@ -63,7 +63,7 @@ isdebian=0
 isfedora=0
 isarch=0
 isvoid=0
-
+isgentoo=0
 if [ -d /usr/src/linux-headers-${UNAME} ]; then
 	# Debian Based Distro
 	isdebian=1
@@ -79,6 +79,9 @@ elif [ -d /usr/lib/modules/${UNAME} ]; then
 elif [ -d /usr/src/kernel-headers-${UNAME} ]; then
 	# Void Linux
 	isvoid=1
+	:
+elif [ -d /usr/src/linux-$(uname -r) ]; then
+	isgentoo=1
 	:
 else
 	echo "linux kernel headers not found:"
@@ -152,24 +155,12 @@ else
 	set +e
 
 	# attempt to download linux-x.x.x.tar.xz kernel
-	wget -c https://cdn.kernel.org/pub/linux/kernel/v$major_version.x/linux-$kernel_version.tar.xz -P $build_dir
-
-	if [[ $? -ne 0 ]]; then
-		echo "Failed to download linux-$kernel_version.tar.xz"
-		echo "Trying to download base kernel version linux-$major_version.$minor_version.tar.xz"
-		echo "This may lead to build failures as too old"
-		echo "If this is an Ubuntu-based distribution this almost certainly will fail to build"
-		echo ""
-   		# if first attempt fails, attempt to download linux-x.x.tar.xz kernel
-   		kernel_version=$major_version.$minor_version
-   		wget -c https://cdn.kernel.org/pub/linux/kernel/v$major_version.x/linux-$kernel_version.tar.xz -P $build_dir
-
-		[[ $? -ne 0 ]] && echo "kernel could not be downloaded...exiting" && exit
-	fi
+	ln -s /usr/src/linux $build_dir
 
 	set -e
 
-	tar --strip-components=3 -xvf $build_dir/linux-$kernel_version.tar.xz --directory=build/ linux-$kernel_version/sound/pci/hda
+#	tar --strip-components=3 -xvf linux.tgz --directory=build/ linux-$kernel_version/sound/pci/hda
+	cp /usr/src/linux/sound/pci/hda build/ -r
 
 fi
 
